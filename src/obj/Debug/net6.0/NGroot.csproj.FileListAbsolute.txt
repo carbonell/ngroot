@@ -1,0 +1,5 @@
+C:\Users\Lad\source\repos\CSharp\NGroot\src\obj\Debug\net6.0\NGroot.csproj.AssemblyReference.cache
+C:\Users\Lad\source\repos\CSharp\NGroot\src\obj\Debug\net6.0\NGroot.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Lad\source\repos\CSharp\NGroot\src\obj\Debug\net6.0\NGroot.AssemblyInfoInputs.cache
+C:\Users\Lad\source\repos\CSharp\NGroot\src\obj\Debug\net6.0\NGroot.AssemblyInfo.cs
+C:\Users\Lad\source\repos\CSharp\NGroot\src\obj\Debug\net6.0\NGroot.csproj.CoreCompileInputs.cache
