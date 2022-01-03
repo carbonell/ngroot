@@ -3,8 +3,8 @@ using Microsoft.Extensions.Options;
 
 namespace NGroot
 {
-    public delegate Task<OperationResult<TModel>> CreateModel<TModel>(TModel model);
-    public delegate Task<OperationResult<TModel>> OverrideDuplicate<TModel>(TModel model, TModel duplicate);
+    public delegate Task<DataLoadResult<TModel>> CreateModel<TModel>(TModel model);
+    public delegate Task<DataLoadResult<TModel>> OverrideDuplicate<TModel>(TModel model, TModel duplicate);
     public delegate Task<TModel> FindDuplicate<TModel>(TModel model);
 
     public interface IModelLoader
@@ -131,7 +131,7 @@ namespace NGroot
 
                     if (duplicate == null)
                     {
-                        OperationResult<TModel> result = await CreateModel(model);
+                        DataLoadResult<TModel> result = await CreateModel(model);
                         opResult.Add(result);
                     }
                     else
@@ -143,7 +143,7 @@ namespace NGroot
                         }
                         else
                         {
-                            var failedResult = OperationResult<TModel>.Failed("This model was already added.");
+                            var failedResult = DataLoadResult<TModel>.Failed("This model was already added.");
                             failedResult.Payload = duplicate;
                             opResult.Add(failedResult);
                         }
@@ -152,7 +152,7 @@ namespace NGroot
             }
             catch (Exception e)
             {
-                opResult.Add(OperationResult<TModel>.Failed(e.Message));
+                opResult.Add(DataLoadResult<TModel>.Failed(e.Message));
             }
             return opResult;
         }
@@ -209,7 +209,7 @@ namespace NGroot
             return _findDuplicatesFunc(model);
         }
 
-        protected virtual Task<OperationResult<TModel>> CreateModel(TModel model)
+        protected virtual Task<DataLoadResult<TModel>> CreateModel(TModel model)
         {
             if (_createModelFunc == null)
                 throw new InvalidOperationException($"Create model function not set for {this.GetType().Name}.");
@@ -226,9 +226,8 @@ namespace NGroot
             var initialDataResult = await ConfigureInitialData(contentRootPath, collaborators);
             foreach (var data in initialDataResult.OperationResults)
             {
-                var tempOpResult = OperationResult<object>.Failed();
+                var tempOpResult = DataLoadResult<object>.Failed();
                 tempOpResult.SetFrom(data);
-                tempOpResult.Succeeded = data.Succeeded;
                 if (data.Payload != null)
                     tempOpResult.Payload = data.Payload;
 
