@@ -5,7 +5,6 @@ namespace NGroot
 {
     public class CollaboratorMap<TModel, TDataIdentifier>
         where TModel : class
-        where TDataIdentifier : Enum
     {
         public CollaboratorMap(TDataIdentifier collaboratorId, string sourceProperty, string destinationProperty, Func<Dictionary<string, object>, TModel, object?> filterCollaborator)
         {

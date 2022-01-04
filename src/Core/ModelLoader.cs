@@ -3,9 +3,9 @@ using Microsoft.Extensions.Options;
 
 namespace NGroot
 {
-    public delegate Task<DataLoadResult<TModel>> CreateModel<TModel>(TModel model);
-    public delegate Task<DataLoadResult<TModel>> OverrideDuplicate<TModel>(TModel model, TModel duplicate);
-    public delegate Task<TModel> FindDuplicate<TModel>(TModel model);
+    public delegate Task<TModel?> CreateModel<TModel>(TModel model);
+    public delegate Task<TModel?> OverrideDuplicate<TModel>(TModel model, TModel duplicate);
+    public delegate Task<TModel?> FindDuplicate<TModel>(TModel model);
 
     public interface IModelLoader
     {
@@ -13,13 +13,24 @@ namespace NGroot
         string Key { get; }
     }
 
-    public abstract class ModelLoader<TModel, TDataIdentifier>
-        : ModelLoader<TModel, TDataIdentifier, InitialDataSettings<TDataIdentifier>>,
+
+    public abstract class ModelLoader<TModel>
+        : ModelLoader<TModel, string>,
         IModelLoader
         where TModel : class
-        where TDataIdentifier : Enum
     {
-        public ModelLoader(IFileParser fileLoader, IOptions<InitialDataSettings<TDataIdentifier>> settings)
+        public ModelLoader(IFileLoader fileLoader, IOptions<NgrootSettings> settings)
+            : base(fileLoader, settings)
+        { }
+    }
+
+    public abstract class ModelLoader<TModel, TDataIdentifier>
+        : ModelLoader<TModel, TDataIdentifier, NgrootSettings<TDataIdentifier>>,
+        IModelLoader
+        where TDataIdentifier : notnull
+        where TModel : class
+    {
+        public ModelLoader(IFileLoader fileLoader, IOptions<NgrootSettings<TDataIdentifier>> settings)
             : base(fileLoader, settings)
         { }
     }
@@ -27,10 +38,10 @@ namespace NGroot
     public abstract class ModelLoader<TModel, TDataIdentifier, TSettings>
         : IModelLoader
         where TModel : class
-        where TDataIdentifier : Enum
-        where TSettings : InitialDataSettings<TDataIdentifier>, new()
+        where TDataIdentifier : notnull
+        where TSettings : NgrootSettings<TDataIdentifier>, new()
     {
-        protected readonly IFileParser _fileLoader;
+        protected readonly IFileLoader _fileLoader;
         protected readonly TSettings _settings;
         protected CreateModel<TModel>? _createModelFunc;
         protected OverrideDuplicate<TModel>? _overrideDuplicateFunc;
@@ -45,12 +56,13 @@ namespace NGroot
         protected Dictionary<TDataIdentifier, CollaboratorMap<TModel, TDataIdentifier>> _mappingExpressions = new Dictionary<TDataIdentifier, CollaboratorMap<TModel, TDataIdentifier>>();
 
 
-        public ModelLoader(IFileParser fileLoader, IOptions<TSettings> settings)
+        public ModelLoader(IFileLoader fileLoader, IOptions<TSettings> settings)
         {
             _fileLoader = fileLoader;
             _settings = settings.Value;
             _fileRelPath = "";
             _key = "";
+            _mappingExpressions = new Dictionary<TDataIdentifier, CollaboratorMap<TModel, TDataIdentifier>>();
         }
 
         public ModelLoader<TModel, TDataIdentifier, TSettings> SetupLoader(string key, string filePath)
@@ -60,10 +72,10 @@ namespace NGroot
             return this;
         }
 
-        public ModelLoader<TModel, TDataIdentifier, TSettings> SetupLoader(TDataIdentifier model)
+        public ModelLoader<TModel, TDataIdentifier, TSettings> SetupLoader(TDataIdentifier key)
         {
-            _key = model.ToString();
-            _fileRelPath = _settings?.GetLoaderFilePath(model) ?? "";
+            _key = key.ToString() ?? string.Empty;
+            _fileRelPath = _settings?.GetLoaderFilePath(key) ?? "";
             return this;
         }
 
@@ -108,53 +120,57 @@ namespace NGroot
             return this;
         }
 
-        protected virtual object? ParseCollaborator<TCollaborator>(Dictionary<string, object> collaborators, TDataIdentifier collaboratorId, TModel model, Func<TCollaborator, TModel, bool> filterExpression)
+        protected virtual object? ParseCollaborator<TCollaborator>(Dictionary<string, object> collaborators, TDataIdentifier collaboratorKey, TModel model, Func<TCollaborator, TModel, bool> filterExpression)
         {
-            var collaboratorList = GetCollaborator<TCollaborator>(collaborators, collaboratorId);
+            var collaboratorList = GetCollaborator<TCollaborator>(collaborators, collaboratorKey);
             return collaboratorList.FirstOrDefault(model, filterExpression);
 
         }
 
 
-        public async Task<BatchOperationResult<TModel>> ConfigureInitialData(string contentRootPath, Dictionary<string, object> collaborators)
+        public async Task<BatchOperationResult<TModel>> ConfigureInitialDataAsync(string contentRootPath, Dictionary<string, object> collaborators)
         {
             var opResult = new BatchOperationResult<TModel>();
             _contentRootPath = contentRootPath;
             try
             {
                 string path = GetFullFilePath();
-                List<TModel> models = await ParseModel(path, collaborators);
+                List<TModel> models = await ParseModelAsync(path, collaborators);
 
                 foreach (var model in models)
                 {
-                    TModel duplicate = await GetExistingModel(model);
+                    var duplicate = await GetExistingModelAsync(model);
 
                     if (duplicate == null)
                     {
-                        DataLoadResult<TModel> result = await CreateModel(model);
+                        var result = await ProcessModelCreationAsync(model);
                         opResult.Add(result);
                     }
                     else
                     {
-                        if (_overrideDuplicateFunc != null)
-                        {
-                            var result = await _overrideDuplicateFunc(model, duplicate);
-                            opResult.Add(result);
-                        }
-                        else
-                        {
-                            var failedResult = DataLoadResult<TModel>.Failed("This model was already added.");
-                            failedResult.Payload = duplicate;
-                            opResult.Add(failedResult);
-                        }
+                        var result = await ProcessModelDuplicationAsync(model, duplicate);
+                        opResult.Add(result);
                     }
                 }
             }
             catch (Exception e)
             {
-                opResult.Add(DataLoadResult<TModel>.Failed(e.Message));
+                opResult.Add(new DataLoadResult<TModel>(e.Message));
             }
             return opResult;
+        }
+
+        protected virtual async Task<DataLoadResult<TModel>> ProcessModelDuplicationAsync(TModel model, TModel duplicate)
+        {
+            if (_overrideDuplicateFunc != null)
+            {
+                var result = await _overrideDuplicateFunc(model, duplicate);
+                return ValidateLoadedModel(result);
+            }
+            else
+            {
+                return new DataLoadResult<TModel>(duplicate, errors: new string[] { "This model was already added." });
+            }
         }
 
         protected virtual string GetFullFilePath()
@@ -173,9 +189,9 @@ namespace NGroot
             return path;
         }
 
-        protected virtual async Task<List<TModel>> ParseModel(string filePath, Dictionary<string, object> collaborators)
+        protected virtual async Task<List<TModel>> ParseModelAsync(string filePath, Dictionary<string, object> collaborators)
         {
-            var models = await _fileLoader.ParseFile<TModel>(filePath);
+            var models = await _fileLoader.LoadFile<TModel>(filePath);
             return ParseCollaborators(models, collaborators);
         }
 
@@ -202,18 +218,31 @@ namespace NGroot
             return models;
         }
 
-        protected virtual Task<TModel> GetExistingModel(TModel model)
+        protected virtual Task<TModel?> GetExistingModelAsync(TModel model)
         {
             if (_findDuplicatesFunc == null)
                 throw new InvalidOperationException($"Find duplicates function not set for {this.GetType().Name}.");
             return _findDuplicatesFunc(model);
         }
 
-        protected virtual Task<DataLoadResult<TModel>> CreateModel(TModel model)
+        protected virtual Task<TModel?> CreateModelAsync(TModel model)
         {
             if (_createModelFunc == null)
                 throw new InvalidOperationException($"Create model function not set for {this.GetType().Name}.");
             return _createModelFunc(model);
+        }
+
+        protected virtual async Task<DataLoadResult<TModel>> ProcessModelCreationAsync(TModel model)
+        {
+            var createdModel = await CreateModelAsync(model);
+            return ValidateLoadedModel(createdModel);
+        }
+
+        protected virtual DataLoadResult<TModel> ValidateLoadedModel(TModel? model)
+        {
+            if (model != null)
+                return new DataLoadResult<TModel>($"Undefined error while loading {typeof(TModel).Name}");
+            return new DataLoadResult<TModel>(model);
         }
 
         protected virtual string GetFilePathRelativeToInitialData()
@@ -223,14 +252,10 @@ namespace NGroot
         {
             var batchDataResult = new BatchOperationResult<object>();
 
-            var initialDataResult = await ConfigureInitialData(contentRootPath, collaborators);
+            var initialDataResult = await ConfigureInitialDataAsync(contentRootPath, collaborators);
             foreach (var data in initialDataResult.OperationResults)
             {
-                var tempOpResult = DataLoadResult<object>.Failed();
-                tempOpResult.SetFrom(data);
-                if (data.Payload != null)
-                    tempOpResult.Payload = data.Payload;
-
+                var tempOpResult = new DataLoadResult<object>(data.Payload, data.Errors.ToArray());
                 batchDataResult.Add(tempOpResult);
             }
 
@@ -248,7 +273,7 @@ namespace NGroot
             return modelList;
         }
 
-        protected List<TCollaborator> GetCollaborator<TCollaborator>(Dictionary<string, object> collaborators, TDataIdentifier model)
-            => GetCollaborator<TCollaborator>(collaborators, model.ToString());
+        protected List<TCollaborator> GetCollaborator<TCollaborator>(Dictionary<string, object> collaborators, TDataIdentifier key)
+            => GetCollaborator<TCollaborator>(collaborators, key?.ToString() ?? "");
     }
 }

@@ -1,0 +1,6 @@
+C:\Users\Lad\source\repos\CSharp\NGroot\tests\obj\Debug\net6.0\NGroot.Tests.csproj.AssemblyReference.cache
+C:\Users\Lad\source\repos\CSharp\NGroot\tests\obj\Debug\net6.0\NGroot.Tests.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Lad\source\repos\CSharp\NGroot\tests\obj\Debug\net6.0\NGroot.Tests.AssemblyInfoInputs.cache
+C:\Users\Lad\source\repos\CSharp\NGroot\tests\obj\Debug\net6.0\NGroot.Tests.AssemblyInfo.cs
+C:\Users\Lad\source\repos\CSharp\NGroot\tests\obj\Debug\net6.0\NGroot.Tests.csproj.CoreCompileInputs.cache
+C:\Users\Lad\source\repos\CSharp\NGroot\tests\bin\Debug\net6.0\CoverletSourceRootsMapping

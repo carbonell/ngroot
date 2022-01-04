@@ -1,15 +1,31 @@
 
 namespace NGroot
 {
-    public class BatchOperationResult<T>
+    public class BatchOperationResult<TModel>
+    where TModel : class
     {
-        public ICollection<DataLoadResult<T>> OperationResults { get; set; } = new List<DataLoadResult<T>>();
-        public IEnumerable<T?> Payloads { get { return OperationResults.Where(o => o.Payload != null).Select(o => o.Payload); } }
+        public BatchOperationResult()
+        {
+            OperationResults = new List<DataLoadResult<TModel>>();
+        }
 
-        public BatchOperationResult<T> Add(DataLoadResult<T> opResult)
+        public ICollection<DataLoadResult<TModel>> OperationResults { get; private set; }
+        public IEnumerable<TModel?> Payloads
+        {
+            get => OperationResults.Where(o => o.Payload != null).Select(o => o.Payload);
+        }
+        public IEnumerable<string> Errors
+        {
+            get => OperationResults.SelectMany(o => o.Errors);
+        }
+
+        public BatchOperationResult<TModel> Add(DataLoadResult<TModel> opResult)
         {
             OperationResults.Add(opResult);
             return this;
         }
+
+        public bool AnySucceeded { get { return OperationResults.Any(o => o.Succeeded); } }
+        public bool AllSucceeded { get { return OperationResults.All(o => o.Succeeded); } }
     }
 }

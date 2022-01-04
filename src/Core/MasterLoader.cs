@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 namespace NGroot
 {
     public class MasterLoader<TDataIdentifier>
-        : MasterLoader<TDataIdentifier, InitialDataSettings<TDataIdentifier>>
+        : MasterLoader<TDataIdentifier, NgrootSettings<TDataIdentifier>>
         where TDataIdentifier : Enum
     {
         public MasterLoader(List<Type> loaders, List<Type>? testLoaders = null)
@@ -15,7 +15,7 @@ namespace NGroot
 
     public abstract class MasterLoader<TDataIdentifier, TSettings>
         where TDataIdentifier : Enum
-        where TSettings : InitialDataSettings<TDataIdentifier>, new()
+        where TSettings : NgrootSettings<TDataIdentifier>, new()
     {
         // Is Important to remember the order of loaders
         private readonly List<Type> Loaders;
