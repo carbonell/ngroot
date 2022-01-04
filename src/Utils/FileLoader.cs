@@ -7,7 +7,7 @@ namespace NGroot
         Task<List<TModel>> LoadFile<TModel>(string path) where TModel : class;
     }
 
-    public class FileParser : IFileLoader
+    public class FileLoader : IFileLoader
     {
         public async Task<List<TModel>> LoadFile<TModel>(string path) where TModel : class
         {
