@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -30,7 +29,7 @@ namespace NGroot
             TestLoaders = testLoaders ?? new List<Type>();
         }
 
-        public async Task ConfigureInitialData(IServiceProvider provider, IWebHostEnvironment env)
+        public async Task ConfigureInitialData(IServiceProvider provider, string contentRootPath)
         {
             var integrationTestsSettings = provider.GetRequiredService<IOptions<TSettings>>().Value;
             if (integrationTestsSettings.SeedTestData)
@@ -41,7 +40,7 @@ namespace NGroot
                 var loader = provider.GetRequiredService(type) as IModelLoader;
                 if (loader != null)
                 {
-                    var result = await loader.LoadInitialData(env.ContentRootPath, collaborators);
+                    var result = await loader.LoadInitialData(contentRootPath, collaborators);
                     collaborators.TryAdd(loader.Key, result.Payloads);
                 }
             }

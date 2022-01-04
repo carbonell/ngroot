@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\Lad\\source\\repos\\CSharp\\NGroot\\src\\NGroot.csproj": {}
+    "C:\\Users\\Lad\\source\\repos\\CSharp\\NGroot\\src\\NGroot.csproj": {}
   },
   "projects": {
-    "c:\\Users\\Lad\\source\\repos\\CSharp\\NGroot\\src\\NGroot.csproj": {
+    "C:\\Users\\Lad\\source\\repos\\CSharp\\NGroot\\src\\NGroot.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\Lad\\source\\repos\\CSharp\\NGroot\\src\\NGroot.csproj",
+        "projectUniqueName": "C:\\Users\\Lad\\source\\repos\\CSharp\\NGroot\\src\\NGroot.csproj",
         "projectName": "NGroot",
-        "projectPath": "c:\\Users\\Lad\\source\\repos\\CSharp\\NGroot\\src\\NGroot.csproj",
+        "projectPath": "C:\\Users\\Lad\\source\\repos\\CSharp\\NGroot\\src\\NGroot.csproj",
         "packagesPath": "C:\\Users\\Lad\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\Lad\\source\\repos\\CSharp\\NGroot\\src\\obj\\",
+        "outputPath": "C:\\Users\\Lad\\source\\repos\\CSharp\\NGroot\\src\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -44,6 +44,20 @@
       "frameworks": {
         "net6.0": {
           "targetAlias": "net6.0",
+          "dependencies": {
+            "Microsoft.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Microsoft.Extensions.Options": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -55,9 +69,6 @@
           "assetTargetFallback": true,
           "warn": true,
           "frameworkReferences": {
-            "Microsoft.AspNetCore.App": {
-              "privateAssets": "none"
-            },
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
