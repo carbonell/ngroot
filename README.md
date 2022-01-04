@@ -1,5 +1,5 @@
 # ngroot
-## Flexible and composable Entity Framework Agnostic Seed Library for Asp.Net Applications
+## Flexible and composable Seed Library for Asp.Net Applications
 
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡾⠛⠳⣄⠀⣠⣤⣤⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣧⠘⣆⣿⠟⢹⠈⠁⣿⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
