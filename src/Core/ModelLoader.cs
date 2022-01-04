@@ -240,7 +240,7 @@ namespace NGroot
 
         protected virtual DataLoadResult<TModel> ValidateLoadedModel(TModel? model)
         {
-            if (model != null)
+            if (model == null)
                 return new DataLoadResult<TModel>($"Undefined error while loading {typeof(TModel).Name}");
             return new DataLoadResult<TModel>(model);
         }

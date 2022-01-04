@@ -4,6 +4,7 @@ using System.Linq;
 using Moq;
 using NGroot;
 using Microsoft.Extensions.Options;
+using System;
 
 namespace NGroot.Tests
 {
@@ -104,7 +105,7 @@ namespace NGroot.Tests
         where TModel : class
         {
             Assert.False(opResult.AnySucceeded);
-            var errorMessage = opResult.Errors.FirstOrDefault();
+            var errorMessage = String.Join(",", opResult.Errors);
             Assert.Equal(expectedError, errorMessage);
         }
 
@@ -122,7 +123,6 @@ namespace NGroot.Tests
             // Assert
 
             AssertError(opResult, "Initial data path not set.");
-            AssertError(opResult, "content root path not set for RolesLoader.");
         }
 
 
@@ -190,7 +190,9 @@ namespace NGroot.Tests
         public async void Cant_Load_Existing_Model_With_Fluent_Api()
         {
             // Arrange
-            var userLoader = GetUsersLoader();
+            var userRepositoryMock = GetUserRepositoryMock();
+            userRepositoryMock.Setup(s => s.FindByUserNameAsync(It.IsAny<string>())).ReturnsAsync(new User("Joe"));
+            var userLoader = GetUsersLoader(userRepository: userRepositoryMock.Object);
             (var contentRootPath, var collaborators) = GetInitialDataParameters();
             // Act
             var opResult = await userLoader.ConfigureInitialDataAsync(contentRootPath, collaborators);
@@ -206,7 +208,8 @@ namespace NGroot.Tests
         {
             // Arrange
             var batchResult = new BatchOperationResult<AssignedPermission>();
-            var loader = GetAssignedPermissionsLoader();
+            var repository = new AssignedPermissionsRepository();
+            var loader = GetAssignedPermissionsLoader(assignedPermissionsRepository: repository);
             var collaborators = GetAssignedPermissionsCollaborators();
 
             // Act
@@ -236,7 +239,7 @@ namespace NGroot.Tests
             var grootSettings = new NgrootSettings
             {
                 InitialDataFolderRelativePath = "C:/InitialData/",
-                PathConfiguration = new List<BaseDataSettings<string>> { new BaseDataSettings<string> { Identifier = "Users", RelativePath = "Users/Users.json" } }
+                PathConfiguration = new List<BaseDataSettings<string>> { new BaseDataSettings<string> { Identifier = "AssignedPermissions", RelativePath = "AssignedPermissions/AssignedPermissions.json" } }
             };
             settings = settings ?? Options.Create(grootSettings);
 

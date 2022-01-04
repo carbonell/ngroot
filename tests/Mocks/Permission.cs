@@ -33,6 +33,20 @@ public interface IAssignedPermissionsRepository
 
 }
 
+public class AssignedPermissionsRepository : IAssignedPermissionsRepository
+{
+    public Task<AssignedPermission?> CreateAsync(AssignedPermission assignedPermission)
+    {
+        assignedPermission.Id = Guid.NewGuid();
+        return Task.FromResult<AssignedPermission?>(assignedPermission);
+    }
+
+    public Task<AssignedPermission?> GetByPermissionAndRoleAsync(int permissionId, int roleId)
+    {
+        return Task.FromResult<AssignedPermission?>(null);
+    }
+}
+
 
 
 
