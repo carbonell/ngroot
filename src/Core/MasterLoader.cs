@@ -16,7 +16,7 @@ namespace NGroot
         where TDataIdentifier : Enum
         where TSettings : NgrootSettings<TDataIdentifier>, new()
     {
-        // Is Important to remember the order of loaders
+        // It's Important to remember the order of loaders
         private readonly List<Type> Loaders;
 
         private readonly List<Type> TestLoaders;
