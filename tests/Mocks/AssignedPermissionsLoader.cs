@@ -12,6 +12,7 @@ public class AssignedPermissionsLoader : ModelLoader<AssignedPermission>
         .FindDuplicatesWith(m => assignedPermissionsRepository.GetByPermissionAndRoleAsync(m.PermissionId, m.RoleId))
         .CreateModelUsing(m => assignedPermissionsRepository.CreateAsync(m))
         .UseFileLoader(() => fileLoader)
+        // Permission Map
         .With<Permission>("Permissions", m => m.PermissionId,
         permission => permission.Id,
         (permission, m) => m.Permission?.Name == permission.Name,
