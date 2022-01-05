@@ -19,6 +19,6 @@ public class UsersLoader
         Setup("Users")
         .FindDuplicatesWith(m => userRepository.FindByUserNameAsync(m.UserName))
         .CreateModelUsing(m => userRepository.CreateAsync(m))
-        .UseFileLoader(() => fileLoader);
+        .UseFileLoader(fileLoader);
     }
 }
