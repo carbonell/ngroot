@@ -6,8 +6,11 @@
     <LangVersion>latest</LangVersion>
     <Version>1.0.0</Version>
     <Authors>carbonell</Authors>
+    <Title>NGroot</Title>
+    <Language>C#</Language>
     <PackageDescription>Flexible and composable Seed Library for Asp.Net Applications</PackageDescription>
     <RepositoryUrl>https://github.com/carbonell/ngroot</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
