@@ -14,10 +14,11 @@ public class UsersLoader
         IFileLoader fileLoader,
         IOptions<NgrootSettings> settings,
         IUserRepository userRepository
-    ) : base(fileLoader, settings)
+    ) : base(settings)
     {
-        SetupLoader("Users")
+        Setup("Users")
         .FindDuplicatesWith(m => userRepository.FindByUserNameAsync(m.UserName))
-        .CreateModelUsing(m => userRepository.CreateAsync(m));
+        .CreateModelUsing(m => userRepository.CreateAsync(m))
+        .UseFileLoader(() => fileLoader);
     }
 }

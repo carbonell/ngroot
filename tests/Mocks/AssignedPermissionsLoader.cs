@@ -6,11 +6,12 @@ namespace NGroot.Tests;
 
 public class AssignedPermissionsLoader : ModelLoader<AssignedPermission>
 {
-    public AssignedPermissionsLoader(IFileLoader fileLoader, IOptions<NgrootSettings> settings, IAssignedPermissionsRepository assignedPermissionsRepository) : base(fileLoader, settings)
+    public AssignedPermissionsLoader(IFileLoader fileLoader, IOptions<NgrootSettings> settings, IAssignedPermissionsRepository assignedPermissionsRepository) : base(settings)
     {
-        SetupLoader("AssignedPermissions")
+        Setup("AssignedPermissions")
         .FindDuplicatesWith(m => assignedPermissionsRepository.GetByPermissionAndRoleAsync(m.PermissionId, m.RoleId))
         .CreateModelUsing(m => assignedPermissionsRepository.CreateAsync(m))
+        .UseFileLoader(() => fileLoader)
         .With<Permission>("Permissions", m => m.PermissionId,
         permission => permission.Id,
         (permission, m) => m.Permission?.Name == permission.Name,

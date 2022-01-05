@@ -19,8 +19,8 @@ namespace NGroot
         IModelLoader
         where TModel : class
     {
-        public ModelLoader(IFileLoader fileLoader, IOptions<NgrootSettings> settings)
-            : base(fileLoader, settings)
+        public ModelLoader(IOptions<NgrootSettings> settings)
+            : base(settings)
         { }
     }
 
@@ -30,8 +30,8 @@ namespace NGroot
         where TDataIdentifier : notnull
         where TModel : class
     {
-        public ModelLoader(IFileLoader fileLoader, IOptions<NgrootSettings<TDataIdentifier>> settings)
-            : base(fileLoader, settings)
+        public ModelLoader(IOptions<NgrootSettings<TDataIdentifier>> settings)
+            : base(settings)
         { }
     }
 
@@ -41,7 +41,7 @@ namespace NGroot
         where TDataIdentifier : notnull
         where TSettings : NgrootSettings<TDataIdentifier>, new()
     {
-        protected readonly IFileLoader _fileLoader;
+        protected IFileLoader _fileLoader;
         protected readonly TSettings _settings;
         protected CreateModel<TModel>? _createModelFunc;
         protected OverrideDuplicate<TModel>? _overrideDuplicateFunc;
@@ -56,23 +56,23 @@ namespace NGroot
         protected Dictionary<TDataIdentifier, CollaboratorMap<TModel, TDataIdentifier>> _mappingExpressions = new Dictionary<TDataIdentifier, CollaboratorMap<TModel, TDataIdentifier>>();
 
 
-        public ModelLoader(IFileLoader fileLoader, IOptions<TSettings> settings)
+        public ModelLoader(IOptions<TSettings> settings)
         {
-            _fileLoader = fileLoader;
+            _fileLoader = new FileLoader();
             _settings = settings.Value;
             _fileRelPath = "";
             _key = "";
             _mappingExpressions = new Dictionary<TDataIdentifier, CollaboratorMap<TModel, TDataIdentifier>>();
         }
 
-        public ModelLoader<TModel, TDataIdentifier, TSettings> SetupLoader(string key, string filePath)
+        public ModelLoader<TModel, TDataIdentifier, TSettings> Setup(string key, string filePath)
         {
             _key = key;
             _fileRelPath = filePath;
             return this;
         }
 
-        public ModelLoader<TModel, TDataIdentifier, TSettings> SetupLoader(TDataIdentifier key)
+        public ModelLoader<TModel, TDataIdentifier, TSettings> Setup(TDataIdentifier key)
         {
             _key = key.ToString() ?? string.Empty;
             _fileRelPath = _settings?.GetLoaderFilePath(key) ?? "";
@@ -94,6 +94,12 @@ namespace NGroot
         public ModelLoader<TModel, TDataIdentifier, TSettings> CreateModelUsing(CreateModel<TModel> createModelUsing)
         {
             _createModelFunc = createModelUsing;
+            return this;
+        }
+
+        public ModelLoader<TModel, TDataIdentifier, TSettings> UseFileLoader(Func<IFileLoader> fileLoaderFunc)
+        {
+            _fileLoader = fileLoaderFunc();
             return this;
         }
 

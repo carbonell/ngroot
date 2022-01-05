@@ -10,7 +10,11 @@ public class RolesLoader : ModelLoader<Role>, IRolesLoader
     private readonly IRoleRepository _roleRepository;
 
     public RolesLoader(IFileLoader fileLoader, IOptions<NgrootSettings> settings,
-        IRoleRepository roleRepository) : base(fileLoader, settings) => _roleRepository = roleRepository;
+        IRoleRepository roleRepository) : base(settings)
+    {
+        _roleRepository = roleRepository;
+        _fileLoader = fileLoader;
+    }
 
     public override string Key { get { return "Roles"; } }
     protected override Task<Role?> GetExistingModelAsync(Role role)
