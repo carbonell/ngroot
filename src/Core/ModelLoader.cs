@@ -103,6 +103,12 @@ namespace NGroot
             return this;
         }
 
+        public ModelLoader<TModel, TDataIdentifier, TSettings> UseFileLoader(IFileLoader fileLoader)
+        {
+            _fileLoader = fileLoader;
+            return this;
+        }
+
         public ModelLoader<TModel, TDataIdentifier, TSettings> With<TCollaborator>(TDataIdentifier collaboratorId, Expression<Func<TModel, object>> modelProperty, Expression<Func<TCollaborator, object>> collaboratorProperty, Func<TCollaborator, TModel, bool> filterExpression, Action<TCollaborator, TModel>? afterMap = null)
         where TCollaborator : class
         {
