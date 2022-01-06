@@ -64,6 +64,33 @@ public class AssignedPermissionsLoader : ModelLoader<AssignedPermission>
 }
 ```
 
+The loader works loading a provided JSON file of your data. New data added to the file is automatically added to your database on application restart. Also, data can be reset by overriding found duplicates:
+
+
+```C#
+public class UsersLoader: ModelLoader<User>,
+    IUsersLoader
+{
+    public UsersLoader(
+        IOptions<NgrootSettings> settings,
+        IUserRepository userRepository
+    ) : base(settings)
+    {
+        Setup("Users")
+        .FindDuplicatesWith(m => userRepository.FindByUserNameAsync(m.UserName))
+        .OverrideDuplicatesWith((model, duplicate) =>
+        {
+            /* ...
+            Your Reset Logic
+            */ ...
+            return repository.EditAsync(duplicate);
+        })
+        .CreateModelUsing(m => userRepository.CreateAsync(m))
+    }
+}
+```
+```
+
 Loaders work with a string Key, but can work just as easily with Any Key you prefer. By default it works with JSON files, but it can work with any file type you want, provided you override a FileLoader.
 ```C#
 public class UsersLoader: ModelLoader<User, EntityEnum>,
