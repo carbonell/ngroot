@@ -64,7 +64,7 @@ public class AssignedPermissionsLoader : ModelLoader<AssignedPermission>
 }
 ```
 
-The loader works loading a provided JSON file of your data. New data added to the file is automatically added to your database on application restart. Also, data can be reset by overriding found duplicates:
+The loader works loading a provided JSON file of your data. New data added to the file is automatically added to your database on application restart. Also, data can be reset by overriding found duplicates. This is very useful for integration testing and conditional data reset.
 
 
 ```C#
@@ -89,9 +89,9 @@ public class UsersLoader: ModelLoader<User>,
     }
 }
 ```
-```
 
 Loaders work with a string Key, but can work just as easily with Any Key you prefer. By default it works with JSON files, but it can work with any file type you want, provided you override a FileLoader.
+
 ```C#
 public class UsersLoader: ModelLoader<User, EntityEnum>,
     IUsersLoader
