@@ -158,3 +158,5 @@ builder.Services.AddScoped<IPackagesLoader, PackagesLoader>();
 And Done!! Wasn't that easy? 
 
 Yeah, It's still an early version. We'll work to make it easier over time :)
+
+For early play, you can checkout the [Nuget Package](https://www.nuget.org/packages/NGroot/) and try yourself:  . It's still unlisted, but we'll officialy be released soon.
