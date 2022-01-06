@@ -29,7 +29,7 @@ namespace NGroot
             TestLoaders = testLoaders ?? new List<Type>();
         }
 
-        public async Task ConfigureInitialData(IServiceProvider provider, string contentRootPath)
+        public async virtual Task ConfigureInitialData(IServiceProvider provider, string contentRootPath)
         {
             var integrationTestsSettings = provider.GetRequiredService<IOptions<TSettings>>().Value;
             if (integrationTestsSettings.SeedTestData)
