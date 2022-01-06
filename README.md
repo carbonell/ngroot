@@ -93,32 +93,31 @@ You can start working with NGroot in 3 Simple Steps!
 1. Make sure to have a C# Class for the Model you want to save to your database and some code to do the Actual Creation! (This little nuisance is what makes NGroot Agnostic from any ORM). For example, if you have an entity named Package you can start with the following:
 
 ```C#
-    public class Package
-    {
-        public int Id { get; set; }
-        public string? Name { get; set; }
-    }
-
+public class Package
+{
+    public int Id { get; set; }
+    public string? Name { get; set; }
+}
 ```
 
 2. Create a Loader For your data:
 ```C#
-    public interface IPackagesLoader : IModelLoader
-    { }
-    public class PackagesLoader : ModelLoader<Package, InitialData>, IPackagesLoader
+public interface IPackagesLoader : IModelLoader
+{ }
+public class PackagesLoader : ModelLoader<Package, InitialData>, IPackagesLoader
+{
+    public PackagesLoader(IOptions<NgrootSettings<InitialData>> settings, ShipmentsContext context) : base(settings)
     {
-        public PackagesLoader(IOptions<NgrootSettings<InitialData>> settings, ShipmentsContext context) : base(settings)
-        {
-            Setup(InitialData.Packages)
-                .FindDuplicatesWith(m => context.Packages.FirstOrDefaultAsync(pck => pck.Name == m.Name))
-                .CreateModelUsing(async (m) =>
-                {
-                    context.Add(m);
-                    await context.SaveChangesAsync();
-                    return m;
-                });
-        }
+        Setup(InitialData.Packages)
+            .FindDuplicatesWith(m => context.Packages.FirstOrDefaultAsync(pck => pck.Name == m.Name))
+            .CreateModelUsing(async (m) =>
+            {
+                context.Add(m);
+                await context.SaveChangesAsync();
+                return m;
+            });
     }
+}
 ```
 
 3. Add a Json File in your project Directory and a NGroot Configuration Object in your appsettings (This is required only for the time being, but Full InMemory Support is coming soon):
@@ -142,16 +141,16 @@ builder.Services.AddScoped<IPackagesLoader, PackagesLoader>();
 
 5. Load your Model! 
 ```C#
-    var provider = builder.Services.BuildServiceProvider();
-    var app = builder.Build();
+var provider = builder.Services.BuildServiceProvider();
+var app = builder.Build();
 
-    var loaders = new List<Type> {
-        typeof(IPackagesLoader),
-    };
-    var testLoaders = new List<Type>
-    { };
-    var masterLoader = new MasterLoader<InitialData>(loaders, testLoaders);
-    await masterLoader.ConfigureInitialData(provider, app.Environment.ContentRootPath);
+var loaders = new List<Type> {
+    typeof(IPackagesLoader),
+};
+var testLoaders = new List<Type>
+{ };
+var masterLoader = new MasterLoader<InitialData>(loaders, testLoaders);
+await masterLoader.ConfigureInitialData(provider, app.Environment.ContentRootPath);
 
 ```
 
