@@ -23,7 +23,7 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠿⢿⣿⣿⣿⣿⣿⣿⡿⠿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 
 
-Seggregate your data into discreate, composable objects with full DI Support and agnostic to any data library:
+Seggregate your data into discreate, composable objects with full DI Support and agnostic to any ORM:
 
 ```C#
 public class UsersLoader: ModelLoader<User>,
@@ -110,7 +110,7 @@ public class UsersLoader: ModelLoader<User, EntityEnum>,
 }
 ```
 
-Multiple extension points are located throughout the library, so you can pretty much override anything of the default functionality.
+Multiple extension points are located throughout the library, so you can pretty much override any of the default functionality at will.
 
 ## Setup
 
