@@ -90,7 +90,7 @@ public class UsersLoader: ModelLoader<User>,
 }
 ```
 
-Loaders work with a string Key, but can work just as easily with Any Key you prefer. By default it works with JSON files, but it can work with any file type you want, provided you override a FileLoader.
+Loaders work with a string Key, but can work just as easily with any key you prefer. By default it works with JSON files, but it can work with any file type you want, provided you override a FileLoader.
 
 ```C#
 public class UsersLoader: ModelLoader<User, EntityEnum>,
