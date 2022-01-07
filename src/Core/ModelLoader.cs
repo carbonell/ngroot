@@ -51,6 +51,8 @@ namespace NGroot
 
         protected string _fileRelPath;
 
+        protected bool _stopOnException = true;
+
         public virtual string Key { get { return _key; } }
 
         protected Dictionary<TDataIdentifier, CollaboratorMap<TModel, TDataIdentifier>> _mappingExpressions = new Dictionary<TDataIdentifier, CollaboratorMap<TModel, TDataIdentifier>>();
@@ -167,6 +169,8 @@ namespace NGroot
             }
             catch (Exception e)
             {
+                if (_stopOnException)
+                    throw;
                 opResult.Add(new DataLoadResult<TModel>(e.Message));
             }
             return opResult;
