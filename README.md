@@ -50,7 +50,6 @@ public class AssignedPermissionsLoader : ModelLoader<AssignedPermission>
         Setup("AssignedPermissions")
         .FindDuplicatesWith(m => assignedPermissionsRepository.GetByPermissionAndRoleAsync(m.PermissionId, m.RoleId))
         .CreateModelUsing(m => assignedPermissionsRepository.CreateAsync(m))
-        .UseFileLoader(() => fileLoader)
         // Permission Map
         .With<Permission>("Permissions", m => m.PermissionId,
         permission => permission.Id,
@@ -127,8 +126,12 @@ public class Package
 }
 ```
 
-2. Create a Loader For your data:
+2. Create a Loader For your data. Here's an example using Entity Framework to Add your data:
 ```C#
+
+using Microsoft.EntityFrameworkCore;
+namespace ShipmentsApi;
+
 public interface IPackagesLoader : IModelLoader
 { }
 public class PackagesLoader : ModelLoader<Package, InitialData>, IPackagesLoader
@@ -147,8 +150,9 @@ public class PackagesLoader : ModelLoader<Package, InitialData>, IPackagesLoader
 }
 ```
 
-3. Add a Json File in your project Directory and a NGroot Configuration Object in your appsettings (This is required only for the time being, but Full InMemory Support is coming soon):
+3. Add a json file in your project Directory and a NGroot configuration object in your appsettings (This is required only for the time being, but full, out of the Box InMemory Support is coming soon):
 
+Your file should look like this:
 ```jsonc
 [
     {
@@ -156,11 +160,29 @@ public class PackagesLoader : ModelLoader<Package, InitialData>, IPackagesLoader
     }
 ]
 ```
+Your appsettings should have an extra element, like this:
+
+```jsonc
+  "NGrootSettings": {
+    "InitialDataFolderRelativePath": "InitialData/Data", // this is the root folder in your project directory where data will be located
+    "SeedTestData": true,
+    "PathConfiguration": [
+      {
+        "Identifier": "Packages",
+        "RelativePath": "Packages.json" // this is the path for each specific file
+      },
+      {
+        "Identifier": "Shipments",
+        "RelativePath": "Shipments.json"
+      }
+    ]
+  }
+```
 
 4. Register your Model In the DI. This allows you to use any existing service in your Application to perform the model creation:
 ```C#
 // Configure Settings
-var initialDataSettingsSection = builder.Configuration.GetSection("InitialDataSettings");
+var initialDataSettingsSection = builder.Configuration.GetSection("NGrootSettings");
 builder.Services.Configure<NgrootSettings<InitialData>>(initialDataSettingsSection);
 // Configure Loader
 builder.Services.AddScoped<IPackagesLoader, PackagesLoader>();
