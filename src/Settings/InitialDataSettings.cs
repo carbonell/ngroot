@@ -15,6 +15,9 @@ namespace NGroot
         public List<BaseDataSettings<TIdentifier>> PathConfiguration { get; set; } = new List<BaseDataSettings<TIdentifier>>();
         public bool SeedTestData { get; set; }
 
+        public bool LoadFromMemory { get; set; }
+
+        public bool StopOnException { get; set; } = true;
         public virtual string GetLoaderFilePath(TIdentifier identifier)
             => PathConfiguration.FirstOrDefault(c => c.Identifier != null && c.Identifier.Equals(identifier))?.RelativePath ?? "";
     }

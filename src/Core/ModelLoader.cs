@@ -51,7 +51,6 @@ namespace NGroot
 
         protected string _fileRelPath;
 
-        protected bool _stopOnException = true;
 
         public virtual string Key { get { return _key; } }
 
@@ -148,7 +147,7 @@ namespace NGroot
             _contentRootPath = contentRootPath;
             try
             {
-                string path = GetFullFilePath();
+                string path = ShouldLoadFromFile() ? GetFullFilePath() : string.Empty;
                 List<TModel> models = await ParseModelAsync(path, collaborators);
 
                 foreach (var model in models)
@@ -169,11 +168,16 @@ namespace NGroot
             }
             catch (Exception e)
             {
-                if (_stopOnException)
+                if (_settings.StopOnException)
                     throw;
                 opResult.Add(new DataLoadResult<TModel>(e.Message));
             }
             return opResult;
+        }
+
+        private bool ShouldLoadFromFile()
+        {
+            return !_settings.LoadFromMemory;
         }
 
         protected virtual async Task<DataLoadResult<TModel>> ProcessModelDuplicationAsync(TModel model, TModel duplicate)
@@ -207,8 +211,20 @@ namespace NGroot
 
         protected virtual async Task<List<TModel>> ParseModelAsync(string filePath, Dictionary<string, object> collaborators)
         {
-            var models = await _fileLoader.LoadFile<TModel>(filePath);
+            var models = await LoadModel(filePath);
             return ParseCollaborators(models, collaborators);
+        }
+
+        protected virtual Task<List<TModel>> LoadModel(string filePath)
+        {
+            if (ShouldLoadFromFile())
+                return _fileLoader.LoadFile<TModel>(filePath);
+            return LoadFromMemory();
+        }
+
+        protected virtual Task<List<TModel>> LoadFromMemory()
+        {
+            return Task.FromResult(new List<TModel>());
         }
 
         protected virtual List<TModel> ParseCollaborators(List<TModel> models, Dictionary<string, object> collaborators)
@@ -236,9 +252,9 @@ namespace NGroot
 
         protected virtual Task<TModel?> GetExistingModelAsync(TModel model)
         {
-            if (_findDuplicatesFunc == null)
-                throw new InvalidOperationException($"Find duplicates function not set for {this.GetType().Name}.");
-            return _findDuplicatesFunc(model);
+            if (_findDuplicatesFunc != null)
+                return _findDuplicatesFunc(model);
+            return Task.FromResult<TModel?>(null);
         }
 
         protected virtual Task<TModel?> CreateModelAsync(TModel model)

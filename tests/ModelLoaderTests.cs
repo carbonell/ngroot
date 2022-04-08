@@ -87,19 +87,19 @@ namespace NGroot.Tests
             Assert.Contains("This model was already added.", errorMessage);
         }
 
-        [Fact]
-        public async void Cant_Load_Data_With_Null_Content_Root_Path()
-        {
-            // Arrange
-            var roleLoader = GetRolesLoader();
-            (_, var collaborators) = GetInitialDataParameters();
+        // [Fact]
+        // public async void Cant_Load_Data_With_Null_Content_Root_Path()
+        // {
+        //     // Arrange
+        //     var roleLoader = GetRolesLoader();
+        //     (_, var collaborators) = GetInitialDataParameters();
 
-            // Act
-            var opResult = await roleLoader.ConfigureInitialDataAsync("", collaborators);
+        //     // Act
+        //     var opResult = await roleLoader.ConfigureInitialDataAsync("", collaborators);
 
-            // Assert
-            AssertError(opResult, "content root path not set for RolesLoader.");
-        }
+        //     // Assert
+        //     AssertError(opResult, "content root path not set for RolesLoader.");
+        // }
 
         private static void AssertError<TModel>(BatchOperationResult<TModel> opResult, string expectedError)
         where TModel : class
@@ -110,12 +110,12 @@ namespace NGroot.Tests
         }
 
         [Fact]
-        public async void Cant_Load_Data_With_Null_Initial_Data_Path()
+        public async void Cant_Load_Data_With_Null_Initial_Data_Path_WhenLoadingFromFile()
         {
             // Arrange
-            var settings = Options.Create(new NgrootSettings());
+            var settings = Options.Create(new NgrootSettings { StopOnException = false });
             var roleLoader = GetRolesLoader(settings: settings);
-            (var contentRootPath, var collaborators) = GetInitialDataParameters();
+            var (contentRootPath, collaborators) = GetInitialDataParameters();
 
             // Act
             var opResult = await roleLoader.ConfigureInitialDataAsync(contentRootPath, collaborators);
@@ -130,7 +130,7 @@ namespace NGroot.Tests
         public async void Cant_Load_Data_With_Null_File_Path()
         {
             // Arrange
-            var settings = Options.Create(new NgrootSettings { InitialDataFolderRelativePath = "C:/InitialData/" });
+            var settings = Options.Create(new NgrootSettings { InitialDataFolderRelativePath = "C:/InitialData/", StopOnException = false });
             var roleLoader = GetRolesLoader(settings: settings);
             (var contentRootPath, var collaborators) = GetInitialDataParameters();
 
