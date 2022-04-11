@@ -6,6 +6,7 @@ namespace NGroot
     public delegate Task<TModel?> CreateModel<TModel>(TModel model);
     public delegate Task<TModel?> OverrideDuplicate<TModel>(TModel model, TModel duplicate);
     public delegate Task<TModel?> FindDuplicate<TModel>(TModel model);
+    public delegate Task<List<TModel>> LoadModel<TModel>();
 
     public interface IModelLoader
     {
@@ -45,6 +46,7 @@ namespace NGroot
         protected readonly TSettings _settings;
         protected CreateModel<TModel>? _createModelFunc;
         protected OverrideDuplicate<TModel>? _overrideDuplicateFunc;
+        protected LoadModel<TModel>? _loadModelFunc;
         protected string _key;
         protected FindDuplicate<TModel>? _findDuplicatesFunc;
         protected string? _contentRootPath;
@@ -110,6 +112,12 @@ namespace NGroot
             return this;
         }
 
+        public ModelLoader<TModel, TDataIdentifier, TSettings> Load(LoadModel<TModel> loadModelFunc)
+        {
+            _loadModelFunc = loadModelFunc;
+            return this;
+        }
+
         public ModelLoader<TModel, TDataIdentifier, TSettings> With<TCollaborator>(TDataIdentifier collaboratorId, Expression<Func<TModel, object>> modelProperty, Expression<Func<TCollaborator, object>> collaboratorProperty, Func<TCollaborator, TModel, bool> filterExpression, Action<TCollaborator, TModel>? afterMap = null)
         where TCollaborator : class
         {
@@ -147,8 +155,7 @@ namespace NGroot
             _contentRootPath = contentRootPath;
             try
             {
-                string path = ShouldLoadFromFile() ? GetFullFilePath() : string.Empty;
-                List<TModel> models = await ParseModelAsync(path, collaborators);
+                List<TModel> models = await LoadModelAsync(collaborators);
 
                 foreach (var model in models)
                 {
@@ -209,21 +216,29 @@ namespace NGroot
             return path;
         }
 
-        protected virtual async Task<List<TModel>> ParseModelAsync(string filePath, Dictionary<string, object> collaborators)
+        protected virtual async Task<List<TModel>> LoadModelAsync(Dictionary<string, object> collaborators)
         {
-            var models = await LoadModel(filePath);
+            var models = await LoadFromSource();
             return ParseCollaborators(models, collaborators);
         }
 
-        protected virtual Task<List<TModel>> LoadModel(string filePath)
+        private Task<List<TModel>> LoadFromSource()
         {
             if (ShouldLoadFromFile())
-                return _fileLoader.LoadFile<TModel>(filePath);
+                return LoadFromFile();
             return LoadFromMemory();
+        }
+
+        protected Task<List<TModel>> LoadFromFile()
+        {
+            string path = ShouldLoadFromFile() ? GetFullFilePath() : string.Empty;
+            return _fileLoader.LoadFile<TModel>(path);
         }
 
         protected virtual Task<List<TModel>> LoadFromMemory()
         {
+            if (_loadModelFunc != null)
+                return _loadModelFunc();
             return Task.FromResult(new List<TModel>());
         }
 
