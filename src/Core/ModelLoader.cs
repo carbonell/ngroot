@@ -42,7 +42,7 @@ namespace NGroot
         where TDataIdentifier : notnull
         where TSettings : NgrootSettings<TDataIdentifier>, new()
     {
-        protected IFileLoader _fileLoader;
+        protected IFileLoader? _fileLoader;
         protected readonly TSettings _settings;
         protected CreateModel<TModel>? _createModelFunc;
         protected OverrideDuplicate<TModel>? _overrideDuplicateFunc;
@@ -61,7 +61,6 @@ namespace NGroot
 
         public ModelLoader(IOptions<TSettings> settings)
         {
-            _fileLoader = new FileLoader();
             _settings = settings.Value;
             _fileRelPath = "";
             _key = "";
@@ -78,7 +77,6 @@ namespace NGroot
         public ModelLoader<TModel, TDataIdentifier, TSettings> Setup(TDataIdentifier key)
         {
             _key = key.ToString() ?? string.Empty;
-            _fileRelPath = _settings?.GetLoaderFilePath(key) ?? "";
             return this;
         }
 
@@ -100,15 +98,28 @@ namespace NGroot
             return this;
         }
 
-        public ModelLoader<TModel, TDataIdentifier, TSettings> UseFileLoader(Func<IFileLoader> fileLoaderFunc)
-        {
-            _fileLoader = fileLoaderFunc();
-            return this;
-        }
-
         public ModelLoader<TModel, TDataIdentifier, TSettings> UseFileLoader(IFileLoader fileLoader)
         {
             _fileLoader = fileLoader;
+            var fileRelPath = _settings?.GetLoaderFilePath(_key) ?? "";
+            return WithRelativeFilePath(fileRelPath);
+        }
+
+        public ModelLoader<TModel, TDataIdentifier, TSettings> UseFileLoader(Func<IFileLoader> fileLoaderFunc)
+        {
+            var fileLoader = fileLoaderFunc();
+            return UseFileLoader(fileLoader);
+        }
+
+        public ModelLoader<TModel, TDataIdentifier, TSettings> UseFileLoader()
+        {
+            var fileLoader = new FileLoader();
+            return UseFileLoader(fileLoader);
+        }
+
+        public ModelLoader<TModel, TDataIdentifier, TSettings> WithRelativeFilePath(string filePath)
+        {
+            _fileRelPath = filePath;
             return this;
         }
 
@@ -145,7 +156,6 @@ namespace NGroot
         {
             var collaboratorList = GetCollaborator<TCollaborator>(collaborators, collaboratorKey);
             return collaboratorList.FirstOrDefault(model, filterExpression);
-
         }
 
 
@@ -224,15 +234,25 @@ namespace NGroot
 
         private Task<List<TModel>> LoadFromSource()
         {
+            ValidateLoadingSource();
+
             if (ShouldLoadFromFile())
                 return LoadFromFile();
             return LoadFromMemory();
         }
 
+        private void ValidateLoadingSource()
+        {
+            if (_fileLoader == null && _loadModelFunc == null)
+                throw new InvalidOperationException("No loading source, neither file nor memory, has been setup for this loader.");
+            if (_fileLoader != null && _loadModelFunc != null)
+                throw new InvalidOperationException("Two loading sources have been setup for this loader. Plese specify just one.");
+        }
+
         protected Task<List<TModel>> LoadFromFile()
         {
             string path = ShouldLoadFromFile() ? GetFullFilePath() : string.Empty;
-            return _fileLoader.LoadFile<TModel>(path);
+            return _fileLoader!.LoadFile<TModel>(path);
         }
 
         protected virtual Task<List<TModel>> LoadFromMemory()

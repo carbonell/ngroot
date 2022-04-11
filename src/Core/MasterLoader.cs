@@ -5,29 +5,28 @@ namespace NGroot
 {
     public class MasterLoader<TDataIdentifier>
         : MasterLoader<TDataIdentifier, NgrootSettings<TDataIdentifier>>
-        where TDataIdentifier : Enum
     {
-        public MasterLoader(List<Type> loaders, List<Type>? testLoaders = null)
+        public MasterLoader(ICollection<Type> loaders, ICollection<Type>? testLoaders = null)
             : base(loaders, testLoaders)
         { }
     }
 
     public abstract class MasterLoader<TDataIdentifier, TSettings>
-        where TDataIdentifier : Enum
         where TSettings : NgrootSettings<TDataIdentifier>, new()
     {
         // It's Important to remember the order of loaders
-        private readonly List<Type> Loaders;
+        private readonly ICollection<Type> Loaders;
 
-        private readonly List<Type> TestLoaders;
+        private readonly ICollection<Type> TestLoaders;
 
         private Dictionary<string, object> collaborators = new Dictionary<string, object>();
 
-        public MasterLoader(List<Type> loaders, List<Type>? testLoaders = null)
+        public MasterLoader(ICollection<Type> loaders, ICollection<Type>? testLoaders = null)
         {
-            Loaders = loaders ?? new List<Type>();
+            Loaders = loaders;
             TestLoaders = testLoaders ?? new List<Type>();
         }
+
 
         public async virtual Task ConfigureInitialData(IServiceProvider provider, string contentRootPath)
         {

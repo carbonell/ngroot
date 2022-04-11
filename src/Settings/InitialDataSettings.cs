@@ -16,10 +16,13 @@ namespace NGroot
         public bool SeedTestData { get; set; }
 
         public bool LoadFromMemory { get; set; }
-
         public bool StopOnException { get; set; } = true;
         public virtual string GetLoaderFilePath(TIdentifier identifier)
             => PathConfiguration.FirstOrDefault(c => c.Identifier != null && c.Identifier.Equals(identifier))?.RelativePath ?? "";
+
+        public virtual string GetLoaderFilePath(string identifier)
+            => PathConfiguration.FirstOrDefault(c => c.Identifier != null && c.Identifier.Equals(identifier))?.RelativePath ?? "";
+
     }
 
     public class BaseDataSettings<TIdentifier>

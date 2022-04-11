@@ -27,6 +27,23 @@ namespace NGroot.Tests
             roleRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Role>()), Times.Once);
         }
 
+        [Fact]
+        public async void Cant_Load_Role_WithoutLoaderHandler()
+        {
+            // Arrange
+            var roleRepositoryMock = GetRoleRepositoryMock();
+            var settings = Options.Create(new NgrootSettings { InitialDataFolderRelativePath = "C:/InitialData/", StopOnException = false });
+
+            var roleLoader = GetRolesLoaderWithNullFileLoader(roleRepository: roleRepositoryMock.Object, settings: settings);
+
+            (var contentRootPath, var collaborators) = GetInitialDataParameters();
+            // Act
+            var opResult = await roleLoader.ConfigureInitialDataAsync(contentRootPath, collaborators);
+
+            // Assert
+            AssertError(opResult, "No loading source, neither file nor memory, has been setup for this loader.");
+        }
+
         private (string, Dictionary<string, object>) GetInitialDataParameters()
         {
             return ("C:/My/Path", new Dictionary<string, object>());
@@ -62,6 +79,26 @@ namespace NGroot.Tests
             return new RolesLoader(fileLoader, settings, roleRepository);
         }
 
+        private RolesLoader GetRolesLoaderWithNullFileLoader(IOptions<NgrootSettings>? settings = null,
+        IRoleRepository? roleRepository = null)
+        {
+
+            var roles = new List<Role> { new Role("Admin") };
+
+
+            var roleRepositoryMock = GetRoleRepositoryMock();
+            roleRepository = roleRepository ?? roleRepositoryMock.Object;
+
+            var grootSettings = new NgrootSettings
+            {
+                InitialDataFolderRelativePath = "C:/InitialData/",
+                PathConfiguration = new List<BaseDataSettings<string>> { new BaseDataSettings<string> { Identifier = "Roles", RelativePath = "Roles/Roles.json" } }
+            };
+            settings = settings ?? Options.Create(grootSettings);
+
+            return new RolesLoader(null!, settings, roleRepository);
+        }
+
         [Fact]
         public async void Can_Load_Existing_Role()
         {
@@ -79,28 +116,14 @@ namespace NGroot.Tests
 
             // Assert
             Assert.False(opResult.AnySucceeded);
+            var errorMessage = opResult.Errors.FirstOrDefault();
+            Assert.Contains("This model was already added.", errorMessage);
+
             var payload = opResult.Payloads.FirstOrDefault();
             Assert.NotNull(payload);
             if (payload != null)
                 Assert.Equal(1, payload.Id);
-            var errorMessage = opResult.Errors.FirstOrDefault();
-            Assert.Contains("This model was already added.", errorMessage);
         }
-
-        // [Fact]
-        // public async void Cant_Load_Data_With_Null_Content_Root_Path()
-        // {
-        //     // Arrange
-        //     var roleLoader = GetRolesLoader();
-        //     (_, var collaborators) = GetInitialDataParameters();
-
-        //     // Act
-        //     var opResult = await roleLoader.ConfigureInitialDataAsync("", collaborators);
-
-        //     // Assert
-        //     AssertError(opResult, "content root path not set for RolesLoader.");
-        // }
-
         private static void AssertError<TModel>(BatchOperationResult<TModel> opResult, string expectedError)
         where TModel : class
         {
@@ -179,6 +202,29 @@ namespace NGroot.Tests
             return new UsersLoader(fileLoader, settings, userRepository);
         }
 
+        private UsersLoaderWith2Handlers GetUsersWith2HandlersLoader(IFileLoader? fileLoader = null, IOptions<NgrootSettings>? settings = null,
+        IUserRepository? userRepository = null)
+        {
+
+            var users = new List<User> { new User("Joe") };
+
+            var fileLoaderMock = new Mock<IFileLoader>();
+            fileLoaderMock.Setup(r => r.LoadFile<User>(It.IsAny<string>())).ReturnsAsync(users);
+            fileLoader = fileLoader ?? fileLoaderMock.Object;
+
+            var userRepositoryMock = GetUserRepositoryMock();
+            userRepository = userRepository ?? userRepositoryMock.Object;
+
+            var grootSettings = new NgrootSettings
+            {
+                InitialDataFolderRelativePath = "C:/InitialData/",
+                PathConfiguration = new List<BaseDataSettings<string>> { new BaseDataSettings<string> { Identifier = "Users", RelativePath = "Users/Users.json" } }
+            };
+            settings = settings ?? Options.Create(grootSettings);
+
+            return new UsersLoaderWith2Handlers(fileLoader, settings, userRepository);
+        }
+
         private static Mock<IUserRepository> GetUserRepositoryMock()
         {
             var roleRepository = new Mock<IUserRepository>();
@@ -198,9 +244,23 @@ namespace NGroot.Tests
             var opResult = await userLoader.ConfigureInitialDataAsync(contentRootPath, collaborators);
 
             // Assert
-            Assert.False(opResult.AnySucceeded);
-
             AssertError(opResult, "This model was already added.");
+        }
+
+
+        [Fact]
+        public async void Cant_Load_Model_With_Both_FileHandlersAndInMemoryHandlers()
+        {
+            // Arrange
+            var settings = Options.Create(new NgrootSettings { InitialDataFolderRelativePath = "C:/InitialData/", StopOnException = false });
+            var userLoader = GetUsersWith2HandlersLoader(settings: settings);
+
+            (var contentRootPath, var collaborators) = GetInitialDataParameters();
+            // Act
+            var opResult = await userLoader.ConfigureInitialDataAsync(contentRootPath, collaborators);
+
+            // Assert
+            AssertError(opResult, "Two loading sources have been setup for this loader. Plese specify just one.");
         }
 
         [Fact]

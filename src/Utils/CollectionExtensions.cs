@@ -12,5 +12,22 @@ namespace NGroot
             }
             return default(TSource);
         }
+
+        public static void AddRange<TSource>(this ICollection<TSource> destination, IEnumerable<TSource> source)
+        {
+            List<TSource> list = destination.ToList();
+
+            if (list != null)
+            {
+                list.AddRange(source);
+            }
+            else
+            {
+                foreach (TSource item in source)
+                {
+                    destination.Add(item);
+                }
+            }
+        }
     }
 }
