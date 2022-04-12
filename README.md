@@ -50,6 +50,7 @@ public class AssignedPermissionsLoader : ModelLoader<AssignedPermission>
         Setup("AssignedPermissions")
         .FindDuplicatesWith(m => assignedPermissionsRepository.GetByPermissionAndRoleAsync(m.PermissionId, m.RoleId))
         .CreateModelUsing(m => assignedPermissionsRepository.CreateAsync(m))
+        .UseFileLoader()
         // Permission Map
         .With<Permission>("Permissions", m => m.PermissionId,
         permission => permission.Id,
@@ -63,7 +64,7 @@ public class AssignedPermissionsLoader : ModelLoader<AssignedPermission>
 }
 ```
 
-The loader works loading a provided JSON file of your data. New data added to the file is automatically added to your database on application restart. Also, data can be reset by overriding found duplicates. This is very useful for integration testing and conditional data reset.
+The loader works loading a provided JSON file of your data. New data added to the file is automatically added to your database on application restart. Also, data can be reset by overriding found duplicates. This is very useful for integration testing and conditional data reset. Starting from version 2.0.0, it also provides InMemory Support.
 
 
 ```C#
@@ -77,6 +78,14 @@ public class UsersLoader: ModelLoader<User>,
     {
         Setup("Users")
         .FindDuplicatesWith(m => userRepository.FindByUserNameAsync(m.UserName))
+        .Load(() => 
+        new User{
+            UserName = "admin"
+        },
+        new User{
+            UserName = "JohnDoe"
+        }
+        )
         .OverrideDuplicatesWith((model, duplicate) =>
         {
             /* ...
@@ -126,7 +135,7 @@ public class Package
 }
 ```
 
-2. Create a Loader For your data. Here's an example using Entity Framework to Add your data:
+2. Create a Loader For your data. Here's an example using Entity Framework to Add your data. You must setup a loading source, either using the Load method to provide your data in memory, or UseFileLoader, to load it from a JsonFile:
 ```C#
 
 using Microsoft.EntityFrameworkCore;
@@ -140,6 +149,9 @@ public class PackagesLoader : ModelLoader<Package, InitialData>, IPackagesLoader
     {
         Setup(InitialData.Packages)
             .FindDuplicatesWith(m => context.Packages.FirstOrDefaultAsync(pck => pck.Name == m.Name))
+            .Load(() => new Package{
+                Name = "My wonderful package"
+            })
             .CreateModelUsing(async (m) =>
             {
                 context.Add(m);
@@ -150,7 +162,56 @@ public class PackagesLoader : ModelLoader<Package, InitialData>, IPackagesLoader
 }
 ```
 
-3. Add a json file in your project Directory and a NGroot configuration object in your appsettings (This is required only for the time being, but full, out of the Box InMemory Support is coming soon):
+3. Setup is very simple:
+```C#
+// On Program.cs
+builder.Services.ConfigureNGroot<InitialData>(settings =>{}, typeof(Program).Assembly);
+```
+
+This will also automatically register your loaders on the provided assembly against dotnet DI container.
+
+4. To Load your models, you must call an additional method to explicitly set the loading order of your data
+```C#
+    await provider.LoadData<InitialData>(new Type[]
+    {
+        typeof(ShipmentsLoader),
+        typeof(PackagesLoader),
+    }, contentRootPath: app.Environment.ContentRootPath);
+```
+
+And Done!! Wasn't that easy? 
+
+
+## Advanced Scenarios:
+
+To Add File Support:
+1. Add UseFileLoader, without arguments, to use the default json fileloader:
+```C#
+
+using Microsoft.EntityFrameworkCore;
+namespace ShipmentsApi;
+
+public interface IPackagesLoader : IModelLoader
+{ }
+public class PackagesLoader : ModelLoader<Package, InitialData>, IPackagesLoader
+{
+    public PackagesLoader(IOptions<NgrootSettings<InitialData>> settings, ShipmentsContext context) : base(settings)
+    {
+        Setup(InitialData.Packages)
+            .FindDuplicatesWith(m => context.Packages.FirstOrDefaultAsync(pck => pck.Name == m.Name))
+            .UseFileLoader()
+            .CreateModelUsing(async (m) =>
+            {
+                context.Add(m);
+                await context.SaveChangesAsync();
+                return m;
+            });
+    }
+}
+```
+You could also specify your own implementation to load any other kind of data (csv, xml, etc).
+
+2. Add a json file in your project Directory:
 
 Your file should look like this:
 ```jsonc
@@ -160,7 +221,7 @@ Your file should look like this:
     }
 ]
 ```
-Your appsettings should have an extra element, like this:
+3. You have a few different options to load your settings. Either adding an extra element to your appsettings, like this:
 
 ```jsonc
   "NGrootSettings": {
@@ -179,7 +240,7 @@ Your appsettings should have an extra element, like this:
   }
 ```
 
-4. Register your Model In the DI. This allows you to use any existing service in your Application to perform the model creation:
+4. And binding the configuration manually or using NGroot configuration helpers:
 ```C#
 // Configure Settings
 var initialDataSettingsSection = builder.Configuration.GetSection("NGrootSettings");
@@ -188,24 +249,15 @@ builder.Services.Configure<NgrootSettings<InitialData>>(initialDataSettingsSecti
 builder.Services.AddScoped<IPackagesLoader, PackagesLoader>();
 ```
 
-5. Load your Model! 
+or
 ```C#
-var provider = builder.Services.BuildServiceProvider();
-var app = builder.Build();
+// Configure Settings
+builder.Services.ConfigureNGroot<InitialData>(builder.Configuration);
 
-var loaders = new List<Type> {
-    typeof(IPackagesLoader),
-};
-var testLoaders = new List<Type>
-{ };
-var masterLoader = new MasterLoader<InitialData>(loaders, testLoaders);
-await masterLoader.ConfigureInitialData(provider, app.Environment.ContentRootPath);
+// Configure Loader
+builder.Services.AddScoped<IPackagesLoader, PackagesLoader>();
 
-```
 
-And Done!! Wasn't that easy? 
-
-Yeah, It's still an early version. We'll work to make it easier over time :)
 
 For early play, you can checkout the [Nuget Package](https://www.nuget.org/packages/NGroot/) and try it yourself. It's still unlisted, but will officialy be released soon.
 

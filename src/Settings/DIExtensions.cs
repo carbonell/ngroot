@@ -37,7 +37,7 @@ namespace NGroot
 
         public static void ConfigureNGroot<TKey>(this IServiceCollection services, ConfigurationManager configurationManager)
         {
-            ConfigureNGroot<TKey>(services, configurationManager, "NGroot");
+            ConfigureNGroot<TKey>(services, configurationManager, "NGrootSettings");
         }
 
         public static void ConfigureNGroot(this IServiceCollection services, ConfigurationManager configurationManager, string appSettingsName)
