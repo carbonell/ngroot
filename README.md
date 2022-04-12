@@ -256,8 +256,24 @@ builder.Services.ConfigureNGroot<InitialData>(builder.Configuration);
 
 // Configure Loader
 builder.Services.AddScoped<IPackagesLoader, PackagesLoader>();
+```
+Sadly, we still don't support automatic loader registration when loading from the appsettings.
 
+or also, bind the configuration from memory:
+```C#
+// Configure Loader
+builder.Services.ConfigureNGroot<InitialData>(settings =>
+{
+    settings.InitialDataFolderRelativePath = "InitialData/Data";
+    settings.SeedTestData = true;
+    settings.PathConfiguration = new List<BaseDataSettings<InitialData>>
+    {
+        new BaseDataSettings<InitialData>{ Identifier = InitialData.Packages, RelativePath = "Packages.json"},
+        new BaseDataSettings<InitialData>{ Identifier = InitialData.Shipments, RelativePath = "Shipments.json"}
+    };
+}, typeof(Program).Assembly);
 
+```
 
 For early play, you can checkout the [Nuget Package](https://www.nuget.org/packages/NGroot/) and try it yourself. It's still unlisted, but will officialy be released soon.
 
