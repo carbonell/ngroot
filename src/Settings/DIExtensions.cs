@@ -24,17 +24,33 @@ namespace NGroot
             services.Configure<NgrootSettings>(settingsBuilder);
             if (loaderAssemblySource != null)
             {
-                services.RegisterLoaders(typeof(ModelLoader<>), loaderAssemblySource);
+                services.RegisterLoaders(typeof(ModelLoader<,>), loaderAssemblySource);
             }
         }
 
         public static void RegisterLoaders(this IServiceCollection services, Type type, Assembly assembly)
         {
-            foreach (var loader in assembly.GetTypes()
-                .Where(t => type.IsAssignableFrom(t) && !t.Equals(type)))
+            var types = assembly.GetTypes()
+            // ;
+            .Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == type);
+            foreach (var loader in types)
             {
                 services.Add(new ServiceDescriptor(loader, loader, ServiceLifetime.Transient));
             }
+        }
+
+        public static async Task LoadData<TKey>(
+            this IServiceProvider provider,
+            IEnumerable<Type> loaders,
+            string contentRootPath = "",
+            IEnumerable<Type>? testLoaders = null
+        )
+        {
+
+            testLoaders = testLoaders ?? new List<Type>();
+            { };
+            var masterLoader = new MasterLoader<TKey>(loaders.ToList(), testLoaders.ToList());
+            await masterLoader.ConfigureInitialData(provider, contentRootPath);
         }
 
     }
