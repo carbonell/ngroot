@@ -47,14 +47,14 @@ namespace NGroot
         protected CreateModel<TModel>? _createModelFunc;
         protected OverrideDuplicate<TModel>? _overrideDuplicateFunc;
         protected LoadModel<TModel>? _loadModelFunc;
-        protected TDataIdentifier _key;
+        protected TDataIdentifier? _key;
         protected FindDuplicate<TModel>? _findDuplicatesFunc;
         protected string? _contentRootPath;
 
         protected string _fileRelPath;
 
 
-        public virtual string Key { get { return _key.ToString() ?? ""; } }
+        public virtual string Key { get { return _key?.ToString() ?? ""; } }
 
         protected Dictionary<TDataIdentifier, CollaboratorMap<TModel, TDataIdentifier>> _mappingExpressions = new Dictionary<TDataIdentifier, CollaboratorMap<TModel, TDataIdentifier>>();
 
@@ -94,7 +94,7 @@ namespace NGroot
         public ModelLoader<TModel, TDataIdentifier, TSettings> UseFileLoader(IFileLoader fileLoader)
         {
             _fileLoader = fileLoader;
-            var fileRelPath = _settings?.GetLoaderFilePath(_key) ?? "";
+            var fileRelPath = _settings?.GetLoaderFilePath(_key!) ?? "";
             return WithRelativeFilePath(fileRelPath);
         }
 
