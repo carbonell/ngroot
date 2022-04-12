@@ -259,7 +259,7 @@ builder.Services.AddScoped<IPackagesLoader, PackagesLoader>();
 ```
 Sadly, we still don't support automatic loader registration when loading from the appsettings.
 
-or also, bind the configuration from memory:
+You could bind the configuration from memory too:
 ```C#
 // Configure Loader
 builder.Services.ConfigureNGroot<InitialData>(settings =>
