@@ -122,7 +122,7 @@ Multiple extension points are located throughout the library, so you can pretty 
 
 ## Setup
 
-You can start working with NGroot in 3 Simple Steps!
+You can start working with NGroot in 4 Simple Steps!
 
 
 1. Make sure to have a C# Class for the Model you want to save to your database and some code to do the Actual Creation! (This little nuisance is what makes NGroot Agnostic from any ORM). For example, if you have an entity named Package you can start with the following:
