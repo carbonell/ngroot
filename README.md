@@ -172,11 +172,11 @@ This will also automatically register your loaders on the provided assembly agai
 
 4. To Load your models, you must call an additional method to explicitly set the loading order of your data
 ```C#
-    await provider.LoadData<InitialData>(new Type[]
-    {
-        typeof(ShipmentsLoader),
-        typeof(PackagesLoader),
-    }, contentRootPath: app.Environment.ContentRootPath);
+await provider.LoadData<InitialData>(new Type[]
+{
+    typeof(ShipmentsLoader),
+    typeof(PackagesLoader),
+}, contentRootPath: app.Environment.ContentRootPath);
 ```
 
 And Done!! Wasn't that easy? 
