@@ -288,13 +288,11 @@ namespace NGroot.Tests
             Assert.Equal(2, admin2Permission?.PermissionId);
         }
 
-        private AssignedPermissionsLoader GetAssignedPermissionsLoader(IFileLoader? fileLoader = null, IOptions<NgrootSettings>? settings = null, IAssignedPermissionsRepository? assignedPermissionsRepository = null)
+        private AssignedPermissionsLoader GetAssignedPermissionsLoader(IOptions<NgrootSettings>? settings = null, IAssignedPermissionsRepository? assignedPermissionsRepository = null)
         {
-            var fileParser = new Mock<IFileLoader>();
-            var profileRoles = GetAssignedPermissions();
+            var profileRoles = AssignedPermissionsLoader.GetAssignedPermissions();
             var assignedPermissionRepositoryMock = GetAssignedPermissionsRepositoryMock();
             assignedPermissionsRepository = assignedPermissionsRepository ?? assignedPermissionRepositoryMock.Object;
-            fileParser.Setup(r => r.LoadFile<AssignedPermission>(It.IsAny<string>())).ReturnsAsync(profileRoles);
 
             var grootSettings = new NgrootSettings
             {
@@ -303,7 +301,7 @@ namespace NGroot.Tests
             };
             settings = settings ?? Options.Create(grootSettings);
 
-            return new AssignedPermissionsLoader(fileParser.Object, settings, assignedPermissionsRepository);
+            return new AssignedPermissionsLoader(settings, assignedPermissionsRepository);
         }
 
         private static Mock<IAssignedPermissionsRepository> GetAssignedPermissionsRepositoryMock()
@@ -322,21 +320,6 @@ namespace NGroot.Tests
             collaborators.Add("Roles", roles);
             collaborators.Add("Permissions", profiles);
             return collaborators;
-        }
-
-        private List<AssignedPermission> GetAssignedPermissions()
-        {
-            return new List<AssignedPermission>
-            {
-                new AssignedPermission{
-                    Role = new Role("Admin1"),
-                    Permission = new Permission("Users.Create")
-                },
-                new AssignedPermission{
-                    Role = new Role("Admin2"),
-                    Permission = new Permission("Users.Edit")
-                }
-            };
         }
 
         private List<Role> GetRoles()

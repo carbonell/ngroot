@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 
 namespace NGroot.Tests;
@@ -6,12 +7,12 @@ namespace NGroot.Tests;
 
 public class AssignedPermissionsLoader : ModelLoader<AssignedPermission>
 {
-    public AssignedPermissionsLoader(IFileLoader fileLoader, IOptions<NgrootSettings> settings, IAssignedPermissionsRepository assignedPermissionsRepository) : base(settings)
+    public AssignedPermissionsLoader(IOptions<NgrootSettings> settings, IAssignedPermissionsRepository assignedPermissionsRepository) : base(settings)
     {
         Setup("AssignedPermissions")
         .FindDuplicatesWith(m => assignedPermissionsRepository.GetByPermissionAndRoleAsync(m.PermissionId, m.RoleId))
         .CreateModelUsing(m => assignedPermissionsRepository.CreateAsync(m))
-        .UseFileLoader(() => fileLoader)
+        .Load(GetAssignedPermissions)
         // Permission Map
         .With<Permission>("Permissions", m => m.PermissionId,
         permission => permission.Id,
@@ -22,4 +23,20 @@ public class AssignedPermissionsLoader : ModelLoader<AssignedPermission>
         (role, m) => role.Name == m.Role?.Name,
         (role, m) => m.Role = null);
     }
+
+    public static List<AssignedPermission> GetAssignedPermissions()
+    {
+        return new List<AssignedPermission>
+            {
+                new AssignedPermission{
+                    Role = new Role("Admin1"),
+                    Permission = new Permission("Users.Create")
+                },
+                new AssignedPermission{
+                    Role = new Role("Admin2"),
+                    Permission = new Permission("Users.Edit")
+                }
+            };
+    }
+
 }

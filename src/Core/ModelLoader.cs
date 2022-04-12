@@ -122,6 +122,13 @@ namespace NGroot
             return this;
         }
 
+
+        public ModelLoader<TModel, TDataIdentifier, TSettings> Load(Func<List<TModel>> loadModelFunc)
+        {
+
+            return Load(() => Task.FromResult(loadModelFunc()));
+        }
+
         public ModelLoader<TModel, TDataIdentifier, TSettings> With<TCollaborator>(TDataIdentifier collaboratorId, Expression<Func<TModel, object>> modelProperty, Expression<Func<TCollaborator, object>> collaboratorProperty, Func<TCollaborator, TModel, bool> filterExpression, Action<TCollaborator, TModel>? afterMap = null)
         where TCollaborator : class
         {
@@ -187,7 +194,7 @@ namespace NGroot
 
         private bool ShouldLoadFromFile()
         {
-            return !_settings.LoadFromMemory;
+            return _fileLoader != null;
         }
 
         protected virtual async Task<DataLoadResult<TModel>> ProcessModelDuplicationAsync(TModel model, TModel duplicate)
