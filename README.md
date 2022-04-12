@@ -275,6 +275,6 @@ builder.Services.ConfigureNGroot<InitialData>(settings =>
 
 ```
 
-For early play, you can checkout the [Nuget Package](https://www.nuget.org/packages/NGroot/) and try it yourself. It's still unlisted, but will officialy be released soon.
+You can checkout the [Nuget Package](https://www.nuget.org/packages/NGroot/) and try it yourself. 
 
 You can also check out the [demo](https://github.com/carbonell/Shippings-Demo)
