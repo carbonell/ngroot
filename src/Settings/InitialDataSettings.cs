@@ -20,9 +20,6 @@ namespace NGroot
         public virtual string GetLoaderFilePath(TIdentifier identifier)
             => PathConfiguration.FirstOrDefault(c => c.Identifier != null && c.Identifier.Equals(identifier))?.RelativePath ?? "";
 
-        public virtual string GetLoaderFilePath(string identifier)
-            => PathConfiguration.FirstOrDefault(c => c.Identifier != null && c.Identifier.Equals(identifier))?.RelativePath ?? "";
-
     }
 
     public class BaseDataSettings<TIdentifier>

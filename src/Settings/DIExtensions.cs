@@ -1,5 +1,6 @@
 
 using System.Reflection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace NGroot
@@ -28,11 +29,27 @@ namespace NGroot
             }
         }
 
+        public static void ConfigureNGroot<TKey>(this IServiceCollection services, ConfigurationManager configurationManager, string appSettingsName)
+        {
+            var ngrootSettings = configurationManager.GetSection(appSettingsName);
+            services.Configure<NgrootSettings<TKey>>(ngrootSettings);
+        }
+
+        public static void ConfigureNGroot<TKey>(this IServiceCollection services, ConfigurationManager configurationManager)
+        {
+            ConfigureNGroot<TKey>(services, configurationManager, "NGroot");
+        }
+
+        public static void ConfigureNGroot(this IServiceCollection services, ConfigurationManager configurationManager, string appSettingsName)
+        {
+            var ngrootSettings = configurationManager.GetSection(appSettingsName);
+            services.Configure<NgrootSettings>(ngrootSettings);
+        }
+
+
         public static void RegisterLoaders(this IServiceCollection services, Type type, Assembly assembly)
         {
-            var types = assembly.GetTypes()
-            // ;
-            .Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == type);
+            var types = assembly.GetTypes().Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == type);
             foreach (var loader in types)
             {
                 services.Add(new ServiceDescriptor(loader, loader, ServiceLifetime.Transient));
@@ -42,8 +59,8 @@ namespace NGroot
         public static async Task LoadData<TKey>(
             this IServiceProvider provider,
             IEnumerable<Type> loaders,
-            string contentRootPath = "",
-            IEnumerable<Type>? testLoaders = null
+            IEnumerable<Type>? testLoaders = null,
+            string contentRootPath = ""
         )
         {
 
